@@ -27,6 +27,6 @@ Após a instalação, a aplicação estará disponível localmente no endereço 
 
 ## Deploy no Azure
 
-O processo de deploy no Azure foi realizado usando o Azure Repos. Primeiro, clonei meu repositório para o Repos da minha organização [link do repositório](https://github.com/VitoriaMdeCamargo/HeatWiseChallenge.git). Em seguida, criei uma aplicação web no Azure e configurei-a para se conectar ao repositório.
+O processo de deploy no Azure foi realizado usando o Azure Repos. Primeiro, clonei meu repositório para o Repos da minha organização `https://github.com/VitoriaMdeCamargo/HeatWiseChallenge.git`. Em seguida, criei uma aplicação web no Azure e configurei-a para se conectar ao repositório.
 
 Depois, atualizei as variáveis de ambiente, definindo o nome `ASPNETCORE_ENVIRONMENT` com o valor `Development`. Com todas as configurações concluídas, finalizei o processo de deploy. Para verificar o resultado, acessei o domínio padrão da minha aplicação web no Azure.
