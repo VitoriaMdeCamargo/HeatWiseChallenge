@@ -1,42 +1,58 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
-- main
+- master
 
 pool:
   vmImage: 'windows-latest'
 
+# Inclui o grupo de variáveis e define variáveis adicionais de build
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  - name: buildPlatform
+    value: 'Any CPU'
+  - name: buildConfiguration
+    value: 'Release'
+  - group: AzureCredentialsGroup  # Adiciona o grupo de variáveis seguras
 
 steps:
-- task: NuGetToolInstaller@1
+# Etapa 1: Instala o SDK do .NET 8.x
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet
 
+# Etapa 2: Restaura os pacotes NuGet para o projeto
 - task: NuGetCommand@2
   inputs:
-    restoreSolution: '$(solution)'
+    restoreSolution: '**/*.sln'  # Encontra e restaura pacotes para todos os arquivos .sln no projeto
 
+# Etapa 3: Compila o projeto usando o Visual Studio Build
 - task: VSBuild@1
   inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    solution: '**/*.sln'  # Compila todos os arquivos de solução (.sln) no repositório
+    platform: '$(buildPlatform)'  # Usa a plataforma definida na variável `buildPlatform`
+    configuration: '$(buildConfiguration)'  # Usa a configuração de build definida na variável `buildConfiguration`
 
-- task: VSTest@2
+# Etapa 4: Publica o projeto para gerar os artefatos de deploy
+- task: DotNetCoreCLI@2
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: 'publish'  # Comando de publicação do .NET CLI
+    publishWebProjects: true  # Publica todos os projetos web no repositório
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'  # Define a saída para o diretório de artefatos
 
+# Etapa 5: Faz login no Azure usando as variáveis seguras
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'Vitoria Camargo(4607ce1f-3a72-47d9-a4c0-63a9a60e8f18)'  # Nome da Service Connection no Azure DevOps
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Realizando login no Azure..."
+      # Autenticação no Azure usando as variáveis seguras
+      az login --service-principal -u $(azureClientId) -p $(azureClientSecret) --tenant $(azureTenantId)
+
+# Etapa 6: Realiza o deploy do projeto no Azure Web App
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: 'Vitoria Camargo(4607ce1f-3a72-47d9-a4c0-63a9a60e8f18)'
-    appType: 'webApp'
-    appName: 'testegsfiap'
-    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
-    deploymentMethod: 'auto'
+    azureSubscription: 'Vitoria Camargo(4607ce1f-3a72-47d9-a4c0-63a9a60e8f18)'  # Nome da sua Service Connection configurada no Azure DevOps
+    appName: 'testegsfiap'  # Nome do Azure Web App onde o projeto será implantado
+    package: '$(Build.ArtifactStagingDirectory)'  # Caminho dos artefatos de publicação gerados na etapa de publicação
