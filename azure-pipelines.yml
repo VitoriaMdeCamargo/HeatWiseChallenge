@@ -32,3 +32,11 @@ steps:
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'Vitoria Camargo(4607ce1f-3a72-47d9-a4c0-63a9a60e8f18)'
+    appType: 'webApp'
+    appName: 'testegsfiap'
+    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    deploymentMethod: 'auto'
